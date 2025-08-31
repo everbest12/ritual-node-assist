@@ -42,10 +42,22 @@ A full-stack Next.js chatbot application that provides step-by-step answers abou
    
    Create a `.env.local` file in the root directory with the following variables:
    ```env
-   PINECONE_API_KEY=your_pinecone_api_key
-   PINECONE_INDEX_NAME=your_pinecone_index_name
-   OPENAI_API_KEY=your_openai_api_key
+   # Required
+   OPENAI_API_KEY=your_openai_api_key_here
+   
+   # Optional - app will work without these (Pinecone for enhanced knowledge base)
+   PINECONE_API_KEY=your_pinecone_api_key_here
+   PINECONE_ENVIRONMENT=your_pinecone_environment_here
+   PINECONE_INDEX_NAME=your_pinecone_index_name_here
    ```
+
+   **For Deployment (Vercel, Netlify, etc.):**
+   
+   Add these environment variables to your deployment platform:
+   - `OPENAI_API_KEY` (required)
+   - `PINECONE_API_KEY` (optional)
+   - `PINECONE_ENVIRONMENT` (optional)
+   - `PINECONE_INDEX_NAME` (optional)
 
 4. **Run the development server**
    ```bash

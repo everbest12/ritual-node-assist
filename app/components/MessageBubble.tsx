@@ -19,12 +19,11 @@ interface MessageBubbleProps {
   onReaction?: (messageId: string, reaction: 'like' | 'dislike') => void
   onCopy?: (text: string) => void
   isStreaming?: boolean
-  streamingProgress?: number
   theme: 'dark' | 'light'
   'data-message-id'?: string
 }
 
-export default function MessageBubble({ message, onReaction, onCopy, isStreaming, streamingProgress, theme, ...props }: MessageBubbleProps) {
+export default function MessageBubble({ message, onReaction, onCopy, isStreaming, theme, ...props }: MessageBubbleProps) {
   const [showActions, setShowActions] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -42,25 +41,7 @@ export default function MessageBubble({ message, onReaction, onCopy, isStreaming
     }
   }
 
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'connected': return 'text-green-400'
-      case 'error': return 'text-red-400'
-      case 'unavailable': return 'text-yellow-400'
-      case 'no_results': return 'text-orange-400'
-      default: return 'text-gray-400'
-    }
-  }
 
-  const getStatusText = (status?: string) => {
-    switch (status) {
-      case 'connected': return 'Using knowledge base'
-      case 'error': return 'Knowledge base unavailable'
-      case 'unavailable': return 'Using general knowledge'
-      case 'no_results': return 'No specific data found'
-      default: return 'Processing...'
-    }
-  }
 
   const getThemeClasses = () => {
     if (theme === 'light') {
@@ -91,45 +72,17 @@ export default function MessageBubble({ message, onReaction, onCopy, isStreaming
         onMouseLeave={() => setShowActions(false)}
         {...props}
       >
-        {/* Message Content */}
-        <div className="whitespace-pre-wrap text-sm leading-relaxed">
-          {message.content}
-          {isStreaming && (
-            <span className="inline-block w-2 h-4 bg-green-400 ml-1 streaming-cursor"></span>
-          )}
-        </div>
+                 {/* Message Content */}
+         <div className="whitespace-pre-wrap text-sm leading-relaxed">
+           {message.content}
+           {isStreaming && (
+             <span className="inline-block w-2 h-4 bg-green-400 ml-1 animate-pulse"></span>
+           )}
+         </div>
 
-        {/* Streaming Progress Indicator */}
-        {isStreaming && streamingProgress !== undefined && (
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className={`${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>
-                Generating response...
-              </span>
-              <span className={`font-mono ${theme === 'light' ? 'text-green-600' : 'text-green-400'}`}>
-                {streamingProgress}%
-              </span>
-            </div>
-            <div className={`w-full h-1.5 rounded-full overflow-hidden ${
-              theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'
-            }`}>
-              <div 
-                className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300 ease-out progress-glow"
-                style={{ width: `${streamingProgress}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
 
-        {/* Status Indicator for AI messages */}
-        {!message.isUser && message.pineconeStatus && (
-          <div className="mt-2 flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${getStatusColor(message.pineconeStatus)}`}></div>
-            <span className={`text-xs ${getStatusColor(message.pineconeStatus)}`}>
-              {getStatusText(message.pineconeStatus)}
-            </span>
-          </div>
-        )}
+
+
 
         {/* Timestamp */}
         <div

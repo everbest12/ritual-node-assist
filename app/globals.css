@@ -177,109 +177,7 @@ body {
   animation: ritual-glow 2s ease-in-out infinite;
 }
 
-/* New AI Processing Animation */
-@keyframes ai-thinking {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
-  }
-  25% {
-    transform: translateY(-8px) rotate(5deg);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translateY(-12px) rotate(0deg);
-    opacity: 0.6;
-  }
-  75% {
-    transform: translateY(-8px) rotate(-5deg);
-    opacity: 0.8;
-  }
-}
 
-.ai-thinking {
-  animation: ai-thinking 1.5s ease-in-out infinite;
-}
-
-@keyframes ai-wave {
-  0%, 100% {
-    transform: scaleY(1);
-  }
-  50% {
-    transform: scaleY(1.5);
-  }
-}
-
-.ai-wave {
-  animation: ai-wave 0.8s ease-in-out infinite;
-}
-
-.ai-wave:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.ai-wave:nth-child(3) {
-  animation-delay: 0.2s;
-}
-
-.ai-wave:nth-child(4) {
-  animation-delay: 0.3s;
-}
-
-.ai-wave:nth-child(5) {
-  animation-delay: 0.4s;
-}
-
-/* Neural Network Animation */
-@keyframes neural-pulse {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-.neural-pulse {
-  animation: neural-pulse 1.2s ease-in-out infinite;
-}
-
-.neural-pulse:nth-child(1) { animation-delay: 0s; }
-.neural-pulse:nth-child(2) { animation-delay: 0.2s; }
-.neural-pulse:nth-child(3) { animation-delay: 0.4s; }
-.neural-pulse:nth-child(4) { animation-delay: 0.6s; }
-.neural-pulse:nth-child(5) { animation-delay: 0.8s; }
-.neural-pulse:nth-child(6) { animation-delay: 1s; }
-
-/* Streaming cursor animation */
-@keyframes streaming-cursor {
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0;
-  }
-}
-
-.streaming-cursor {
-  animation: streaming-cursor 1s ease-in-out infinite;
-}
-
-/* Progress bar glow effect */
-@keyframes progress-glow {
-  0%, 100% {
-    box-shadow: 0 0 5px rgba(34, 197, 94, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
-  }
-}
-
-.progress-glow {
-  animation: progress-glow 2s ease-in-out infinite;
-}
 
 /* Enhanced glow effect */
 .glow {
@@ -391,4 +289,215 @@ body {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Advanced AI Loading Animation */
+@keyframes dna-helix {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0.7;
+  }
+  25% {
+    transform: rotate(90deg) scale(1.1);
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(180deg) scale(0.9);
+    opacity: 0.8;
+  }
+  75% {
+    transform: rotate(270deg) scale(1.05);
+    opacity: 1;
+  }
+}
+
+.dna-helix {
+  animation: dna-helix 4s ease-in-out infinite;
+}
+
+@keyframes particle-orbit {
+  0% {
+    transform: rotate(0deg) translateX(20px) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) translateX(20px) rotate(-360deg);
+    opacity: 0;
+  }
+}
+
+.particle-orbit {
+  animation: particle-orbit 3s linear infinite;
+}
+
+.particle-orbit:nth-child(1) { animation-delay: 0s; }
+.particle-orbit:nth-child(2) { animation-delay: 0.5s; }
+.particle-orbit:nth-child(3) { animation-delay: 1s; }
+.particle-orbit:nth-child(4) { animation-delay: 1.5s; }
+.particle-orbit:nth-child(5) { animation-delay: 2s; }
+.particle-orbit:nth-child(6) { animation-delay: 2.5s; }
+
+@keyframes energy-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    transform: scale(1.3);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+  }
+}
+
+.energy-pulse {
+  animation: energy-pulse 2s ease-in-out infinite;
+}
+
+@keyframes neural-network {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.4;
+  }
+  33% {
+    transform: scale(1.2) rotate(120deg);
+    opacity: 1;
+  }
+  66% {
+    transform: scale(0.8) rotate(240deg);
+    opacity: 0.7;
+  }
+}
+
+.neural-network {
+  animation: neural-network 3s ease-in-out infinite;
+}
+
+.neural-network:nth-child(1) { animation-delay: 0s; }
+.neural-network:nth-child(2) { animation-delay: 0.3s; }
+.neural-network:nth-child(3) { animation-delay: 0.6s; }
+.neural-network:nth-child(4) { animation-delay: 0.9s; }
+.neural-network:nth-child(5) { animation-delay: 1.2s; }
+.neural-network:nth-child(6) { animation-delay: 1.5s; }
+
+@keyframes quantum-field {
+  0% {
+    transform: translateX(-100%) scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(0%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.quantum-field {
+  animation: quantum-field 4s ease-in-out infinite;
+}
+
+@keyframes holographic-scan {
+  0% {
+    transform: translateY(-100%) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.holographic-scan {
+  animation: holographic-scan 3s linear infinite;
+}
+
+.holographic-scan:nth-child(1) { animation-delay: 0s; }
+.holographic-scan:nth-child(2) { animation-delay: 0.5s; }
+.holographic-scan:nth-child(3) { animation-delay: 1s; }
+.holographic-scan:nth-child(4) { animation-delay: 1.5s; }
+
+@keyframes data-stream {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.data-stream {
+  animation: data-stream 2.5s ease-in-out infinite;
+}
+
+@keyframes consciousness-wave {
+  0%, 100% {
+    transform: scaleY(0.2);
+    opacity: 0.3;
+  }
+  25% {
+    transform: scaleY(0.8);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1.2);
+    opacity: 1;
+  }
+  75% {
+    transform: scaleY(0.6);
+    opacity: 0.8;
+  }
+}
+
+.consciousness-wave {
+  animation: consciousness-wave 2s ease-in-out infinite;
+}
+
+.consciousness-wave:nth-child(1) { animation-delay: 0s; }
+.consciousness-wave:nth-child(2) { animation-delay: 0.2s; }
+.consciousness-wave:nth-child(3) { animation-delay: 0.4s; }
+.consciousness-wave:nth-child(4) { animation-delay: 0.6s; }
+.consciousness-wave:nth-child(5) { animation-delay: 0.8s; }
+.consciousness-wave:nth-child(6) { animation-delay: 1s; }
+.consciousness-wave:nth-child(7) { animation-delay: 1.2s; }
+.consciousness-wave:nth-child(8) { animation-delay: 1.4s; }
+
+@keyframes singularity-core {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+  25% {
+    transform: scale(1.1) rotate(90deg);
+    filter: brightness(1.3);
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    filter: brightness(1.5);
+  }
+  75% {
+    transform: scale(1.1) rotate(270deg);
+    filter: brightness(1.3);
+  }
+}
+
+.singularity-core {
+  animation: singularity-core 4s ease-in-out infinite;
 }

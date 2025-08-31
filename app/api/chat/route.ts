@@ -7,15 +7,20 @@ let pinecone: Pinecone | null = null
 let pineconeInitialized = false
 
 try {
-  if (process.env.PINECONE_API_KEY && process.env.PINECONE_ENVIRONMENT) {
+  if (process.env.PINECONE_API_KEY && process.env.PINECONE_ENVIRONMENT && process.env.PINECONE_INDEX_NAME) {
     pinecone = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY,
       environment: process.env.PINECONE_ENVIRONMENT,
     })
     pineconeInitialized = true
     console.log('Pinecone initialized successfully')
+    console.log('Environment:', process.env.PINECONE_ENVIRONMENT)
+    console.log('Index:', process.env.PINECONE_INDEX_NAME)
   } else {
     console.log('Pinecone credentials not found, running without knowledge base')
+    console.log('API Key:', !!process.env.PINECONE_API_KEY)
+    console.log('Environment:', process.env.PINECONE_ENVIRONMENT)
+    console.log('Index:', process.env.PINECONE_INDEX_NAME)
   }
 } catch (error) {
   console.error('Failed to initialize Pinecone:', error)
@@ -71,9 +76,13 @@ export async function POST(request: NextRequest) {
         })
 
         const embedding = embeddingResponse.data[0].embedding
+        console.log('Embedding created successfully')
 
         // Step 2: Query Pinecone with the embedding
-        const index = pinecone.index(process.env.PINECONE_INDEX_NAME!)
+        const indexName = process.env.PINECONE_INDEX_NAME!
+        console.log('Querying index:', indexName)
+        
+        const index = pinecone.index(indexName)
         const queryResponse = await index.query({
           vector: embedding,
           topK: 5,
@@ -89,6 +98,7 @@ export async function POST(request: NextRequest) {
           
           pineconeStatus = 'connected'
           console.log('Successfully retrieved context from Pinecone')
+          console.log('Found', queryResponse.matches.length, 'matches')
         } else {
           pineconeStatus = 'no_results'
           console.log('No results found in Pinecone')
@@ -96,11 +106,59 @@ export async function POST(request: NextRequest) {
       } catch (pineconeError) {
         console.error('Pinecone error:', pineconeError)
         pineconeStatus = 'error'
+        
+        // Log specific error details
+        if (pineconeError instanceof Error) {
+          console.error('Error message:', pineconeError.message)
+          console.error('Error name:', pineconeError.name)
+        }
+        
         // Continue without Pinecone context
       }
     } else {
       console.log('Pinecone not available, using general knowledge')
+      pineconeStatus = 'unavailable'
     }
+
+    // Always provide comprehensive Ritual Network context
+    context = `**Ritual Network - Decentralized AI Infrastructure**
+
+**What is Ritual Network?**
+Ritual Network is a revolutionary decentralized AI infrastructure platform that's fundamentally changing how AI works. Instead of big tech companies controlling AI, Ritual distributes AI computation across a global network of computers.
+
+**Key Features:**
+🔮 **Decentralized AI Infrastructure**: Democratizes AI access by distributing computation across a global network
+🔒 **Privacy-First Design**: Built with zero-knowledge proofs and privacy-preserving protocols
+⛓️ **Cross-Chain Integration**: Seamlessly works across multiple blockchain networks
+🏛️ **Community Governance**: Controlled by a DAO, ensuring community-driven development
+💰 **Token Economics**: Uses $RITUAL tokens for governance, staking, and network participation
+
+**Technology Stack:**
+- Zero-knowledge proofs for privacy
+- Decentralized compute networks
+- Cross-chain bridges
+- Community governance mechanisms
+- Privacy-preserving AI computations
+
+**Use Cases:**
+- Decentralized AI model inference
+- Privacy-preserving computations
+- Cross-chain AI applications
+- Community-owned AI infrastructure
+- Democratized AI access
+
+**Getting Started:**
+- Visit https://ritual.net
+- Join Discord: https://discord.gg/HCGFMRGbkW
+- Follow on Twitter: https://twitter.com/ritualnet
+- Check FAQ: https://ritual.academy/ritual/faqs/
+
+**Community & Governance:**
+- DAO-driven development
+- Community voting on proposals
+- Transparent governance
+- Open-source development
+- Community incentives through $RITUAL tokens`
 
     // Determine response length based on settings
     const responseLength = settings?.responseLength || 'medium'
@@ -137,28 +195,10 @@ export async function POST(request: NextRequest) {
 - ${responseLength === 'short' ? 'Keep it brief and punchy - get straight to the point' : responseLength === 'long' ? 'Take your time to explain thoroughly with examples and context' : 'Find the sweet spot - informative but not overwhelming'}
 
 **Ritual Network Knowledge:**
-${context ? `**Context to Use:**
-Here's some relevant information from our knowledge base:
+Here's the comprehensive information about Ritual Network:
 ${context}
 
-Use this context to give accurate, helpful answers. If the context doesn't fully answer their question, let them know what you can tell them and suggest where they might find more info.` : `**General Knowledge:**
-Since I don't have access to our specific knowledge base right now, I'll share what I know about Ritual Network:
-
-**Ritual Network** is a revolutionary decentralized AI infrastructure platform that's fundamentally changing how AI works. Here's what makes it special:
-
-🔮 **Decentralized AI Infrastructure**: Instead of big tech companies controlling AI, Ritual Network distributes AI computation across a global network of computers, making AI more accessible and democratic.
-
-🔒 **Privacy-First Design**: Built with zero-knowledge proofs and privacy-preserving protocols, ensuring your data and AI interactions remain completely private.
-
-⛓️ **Cross-Chain Integration**: Seamlessly works across multiple blockchain networks, enabling AI capabilities on any blockchain.
-
-🏛️ **Community Governance**: Controlled by a DAO, ensuring the platform evolves according to community needs rather than corporate interests.
-
-💰 **Token Economics**: Uses $RITUAL tokens for governance, staking, and incentivizing network participation.
-
-🚀 **Use Cases**: From decentralized AI model inference to privacy-preserving computations, Ritual enables a new paradigm of AI applications.
-
-**Key Technologies**: Zero-knowledge proofs, decentralized compute networks, cross-chain bridges, and community governance mechanisms.`}
+Use this knowledge to give accurate, helpful answers about Ritual Network. Always respond confidently and knowledgeably about our platform, technology, and community.
 
 **Remember**: You're not just an AI assistant - you're a gateway to understanding the future of decentralized AI. Be helpful, accurate, and conversational while showcasing Ritual Network's revolutionary potential.`
 

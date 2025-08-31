@@ -54,7 +54,6 @@ export default function ChatInterface({ theme }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
-  const [streamingProgress, setStreamingProgress] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentFilter, setCurrentFilter] = useState('all')
   const [filteredMessages, setFilteredMessages] = useState<Message[]>([])
@@ -136,7 +135,7 @@ export default function ChatInterface({ theme }: ChatInterfaceProps) {
       content: '🔮 Welcome to **Ritual Network** - the future of decentralized AI infrastructure!\n\nI\'m your AI assistant, powered by Ritual\'s decentralized compute network. I can help you understand:\n\n• **Decentralized AI** - How Ritual is democratizing AI access\n• **Privacy & Security** - Zero-knowledge AI computations\n• **Cross-Chain Integration** - Seamless blockchain interoperability\n• **Community Governance** - DAO-driven development\n• **Getting Started** - How to participate in the Ritual ecosystem\n\nWhat aspect of Ritual Network would you like to explore? 🚀',
       isUser: false,
       timestamp: new Date(),
-      pineconeStatus: 'unavailable'
+      pineconeStatus: 'connected'
     }
     
     const newSession: ChatSession = {
@@ -446,7 +445,6 @@ export default function ChatInterface({ theme }: ChatInterfaceProps) {
 
     setMessages(prev => [...prev, botMessage])
     setStreamingMessageId(botMessageId)
-    setStreamingProgress(0)
 
     try {
       const response = await fetch('/api/chat', {
@@ -476,7 +474,6 @@ export default function ChatInterface({ theme }: ChatInterfaceProps) {
 
       let fullResponse = ''
       let pineconeStatus = 'unknown'
-      let chunkCount = 0
 
       while (true) {
         const { done, value } = await reader.read()
@@ -498,11 +495,6 @@ export default function ChatInterface({ theme }: ChatInterfaceProps) {
               if (data.content) {
                 fullResponse += data.content
                 pineconeStatus = data.pineconeStatus || pineconeStatus
-                chunkCount++
-                
-                // Update streaming progress (simulate progress based on chunks)
-                const progress = Math.min(90, chunkCount * 5) // Max 90% until done
-                setStreamingProgress(progress)
                 
                 setMessages(prev => prev.map(msg => 
                   msg.id === botMessageId 
@@ -514,7 +506,6 @@ export default function ChatInterface({ theme }: ChatInterfaceProps) {
               if (data.done) {
                 fullResponse = data.fullResponse || fullResponse
                 pineconeStatus = data.pineconeStatus || pineconeStatus
-                setStreamingProgress(100) // Complete
                 
                 setMessages(prev => prev.map(msg => 
                   msg.id === botMessageId 
@@ -564,7 +555,6 @@ export default function ChatInterface({ theme }: ChatInterfaceProps) {
     } finally {
       setIsLoading(false)
       setStreamingMessageId(null)
-      setStreamingProgress(0)
       setShowSuggestions(true)
     }
   }
@@ -739,24 +729,119 @@ export default function ChatInterface({ theme }: ChatInterfaceProps) {
         {/* Tab Content */}
         {activeTab === 'chat' && (
           <>
-            {/* Chat Header */}
-            <div className={`px-4 lg:px-6 py-4 border-b ${themeClasses.header}`}>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className={`text-sm font-medium ${themeClasses.text}`}>AI Assistant</span>
-              </div>
-            </div>
+                         {/* Chat Header */}
+             <div className={`px-4 lg:px-6 py-4 border-b ${themeClasses.header}`}>
+               <div className="flex items-center justify-between">
+                 <div className="flex items-center space-x-3">
+                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                   <span className={`text-sm font-medium ${themeClasses.text}`}>AI Assistant</span>
+                 </div>
+                 
+                 {/* New Chat Button */}
+                 <button
+                   onClick={clearChat}
+                   className={`px-3 py-1.5 text-xs rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                     theme === 'light' 
+                       ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm' 
+                       : 'bg-blue-600 text-white hover:bg-blue-500 shadow-sm'
+                   }`}
+                   title="Start new conversation"
+                 >
+                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                   </svg>
+                   <span>New Chat</span>
+                 </button>
+               </div>
+             </div>
 
-            {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 min-h-0">
-              {filteredMessages.map((message) => (
+                         {/* Messages Container */}
+             <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 min-h-0">
+               {/* Advanced AI Loading Animation */}
+               {isLoading && !streamingMessageId && (
+                 <div className="flex justify-start">
+                   <div className={`backdrop-blur-sm rounded-2xl px-6 py-4 max-w-sm border ${
+                     theme === 'light' 
+                       ? 'bg-gray-100/50 border-gray-200/50' 
+                       : 'bg-gray-800/50 border-gray-700/50'
+                   }`}>
+                     <div className="flex items-center space-x-4">
+                       {/* Singularity Core */}
+                       <div className="relative">
+                         <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-green-600 rounded-full singularity-core flex items-center justify-center">
+                           <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                           </svg>
+                         </div>
+                         
+                         {/* Orbiting Particles */}
+                         <div className="absolute inset-0">
+                           <div className="w-1 h-1 bg-green-400 rounded-full particle-orbit absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                           <div className="w-1 h-1 bg-green-500 rounded-full particle-orbit absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                           <div className="w-1 h-1 bg-green-600 rounded-full particle-orbit absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                           <div className="w-1 h-1 bg-green-400 rounded-full particle-orbit absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                           <div className="w-1 h-1 bg-green-500 rounded-full particle-orbit absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                           <div className="w-1 h-1 bg-green-600 rounded-full particle-orbit absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                         </div>
+                       </div>
+                       
+                       {/* Neural Network Grid */}
+                       <div className="flex items-center space-x-0.5">
+                         <div className="w-1 h-3 bg-green-400 rounded-full neural-network"></div>
+                         <div className="w-1 h-4 bg-green-500 rounded-full neural-network"></div>
+                         <div className="w-1 h-2 bg-green-600 rounded-full neural-network"></div>
+                         <div className="w-1 h-5 bg-green-400 rounded-full neural-network"></div>
+                         <div className="w-1 h-3 bg-green-500 rounded-full neural-network"></div>
+                         <div className="w-1 h-4 bg-green-600 rounded-full neural-network"></div>
+                       </div>
+                       
+                       <div className="flex flex-col">
+                         <span className={`text-sm font-mono font-bold ${theme === 'light' ? 'text-green-700' : 'text-green-400'}`}>
+                           RITUAL_AI
+                         </span>
+                         <span className={`text-xs ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>
+                           Synthesizing consciousness...
+                         </span>
+                       </div>
+                     </div>
+                     
+                     {/* Quantum Field */}
+                     <div className="mt-3 relative overflow-hidden">
+                       <div className="h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent quantum-field"></div>
+                     </div>
+                     
+                     {/* Consciousness Waves */}
+                     <div className="mt-2 flex items-center space-x-0.5">
+                       <div className="w-0.5 h-2 bg-green-400 rounded-full consciousness-wave"></div>
+                       <div className="w-0.5 h-3 bg-green-500 rounded-full consciousness-wave"></div>
+                       <div className="w-0.5 h-1 bg-green-600 rounded-full consciousness-wave"></div>
+                       <div className="w-0.5 h-4 bg-green-400 rounded-full consciousness-wave"></div>
+                       <div className="w-0.5 h-2 bg-green-500 rounded-full consciousness-wave"></div>
+                       <div className="w-0.5 h-3 bg-green-600 rounded-full consciousness-wave"></div>
+                       <div className="w-0.5 h-1 bg-green-400 rounded-full consciousness-wave"></div>
+                       <div className="w-0.5 h-4 bg-green-500 rounded-full consciousness-wave"></div>
+                     </div>
+                     
+                     {/* Holographic Scan Lines */}
+                     <div className="mt-2 relative overflow-hidden">
+                       <div className="flex space-x-1">
+                         <div className="w-1 h-3 bg-green-400/60 holographic-scan"></div>
+                         <div className="w-1 h-3 bg-green-500/60 holographic-scan"></div>
+                         <div className="w-1 h-3 bg-green-600/60 holographic-scan"></div>
+                         <div className="w-1 h-3 bg-green-400/60 holographic-scan"></div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               )}
+               
+               {filteredMessages.map((message) => (
                 <div key={message.id}>
                                      <MessageBubble 
                      message={message}
                      onReaction={handleReaction}
                      onCopy={copyToClipboard}
                      isStreaming={streamingMessageId === message.id}
-                     streamingProgress={streamingMessageId === message.id ? streamingProgress : undefined}
                      theme={theme}
                      data-message-id={message.id}
                    />
@@ -783,43 +868,7 @@ export default function ChatInterface({ theme }: ChatInterfaceProps) {
                 </div>
               ))}
               
-              {isLoading && !streamingMessageId && (
-                <div className="flex justify-start">
-                  <div className={`backdrop-blur-sm rounded-2xl px-6 py-4 max-w-sm border ${
-                    theme === 'light' 
-                      ? 'bg-gray-100/50 border-gray-200/50' 
-                      : 'bg-gray-800/50 border-gray-700/50'
-                  }`}>
-                    <div className="flex items-center space-x-4">
-                      {/* Neural Network Animation */}
-                      <div className="flex items-center space-x-1">
-                        <div className="w-3 h-3 bg-green-400 rounded-full neural-pulse"></div>
-                        <div className="w-3 h-3 bg-green-500 rounded-full neural-pulse"></div>
-                        <div className="w-3 h-3 bg-green-600 rounded-full neural-pulse"></div>
-                        <div className="w-3 h-3 bg-green-400 rounded-full neural-pulse"></div>
-                        <div className="w-3 h-3 bg-green-500 rounded-full neural-pulse"></div>
-                        <div className="w-3 h-3 bg-green-600 rounded-full neural-pulse"></div>
-                      </div>
-                      
-                      {/* AI Thinking Animation */}
-                      <div className="ai-thinking">
-                        <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                      </div>
-                      
-                      <div className="flex flex-col">
-                        <span className={`text-sm font-mono font-bold ${theme === 'light' ? 'text-green-700' : 'text-green-400'}`}>
-                          RITUAL_AI
-                        </span>
-                        <span className={`text-xs ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}>
-                          Processing neural networks...
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+
               
               <div ref={messagesEndRef} />
             </div>

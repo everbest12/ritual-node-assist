@@ -1,51 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Pinecone } from '@pinecone-database/pinecone'
-import OpenAI from 'openai'
-
-// Initialize Pinecone with better error handling
-let pinecone: Pinecone | null = null
-let pineconeInitialized = false
-
-try {
-  if (process.env.PINECONE_API_KEY && process.env.PINECONE_ENVIRONMENT && process.env.PINECONE_INDEX_NAME) {
-    pinecone = new Pinecone({
-      apiKey: process.env.PINECONE_API_KEY,
-      environment: process.env.PINECONE_ENVIRONMENT,
-    })
-    pineconeInitialized = true
-    console.log('Pinecone initialized successfully')
-    console.log('Environment:', process.env.PINECONE_ENVIRONMENT)
-    console.log('Index:', process.env.PINECONE_INDEX_NAME)
-  } else {
-    console.log('Pinecone credentials not found, running without knowledge base')
-    console.log('API Key:', !!process.env.PINECONE_API_KEY)
-    console.log('Environment:', process.env.PINECONE_ENVIRONMENT)
-    console.log('Index:', process.env.PINECONE_INDEX_NAME)
-  }
-} catch (error) {
-  console.error('Failed to initialize Pinecone:', error)
-  pineconeInitialized = false
-}
-
-// Initialize OpenAI lazily
-let openai: OpenAI | null = null
-
-function getOpenAI() {
-  if (!openai) {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OpenAI API key not configured')
-    }
-    openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-  }
-  return openai
-}
+import { getPineconeClient } from '../../utils/pinecone'
+import { getOpenAIClient } from '../../utils/openai'
 
 export async function POST(request: NextRequest) {
   try {
     const { message, settings } = await request.json()
-
+    
     if (!message) {
       return NextResponse.json(
         { error: 'Message is required' },
@@ -53,75 +13,45 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if OpenAI API key is available
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      )
-    }
+    const client = getOpenAIClient()
+    const index = getPineconeClient()
 
     let context = ''
     let pineconeStatus = 'unavailable'
-    
-    // Try to get context from Pinecone if available
-    if (pinecone && pineconeInitialized) {
-      try {
-        console.log('Attempting to query Pinecone...')
-        
-        // Step 1: Embed the user message
-        const embeddingResponse = await getOpenAI().embeddings.create({
-          model: 'text-embedding-3-small',
-          input: message,
-        })
 
-        const embedding = embeddingResponse.data[0].embedding
-        console.log('Embedding created successfully')
+    try {
+      // 1. Embed query
+      const embedding = await client.embeddings.create({
+        model: 'text-embedding-3-small',
+        input: [message],
+      })
 
-        // Step 2: Query Pinecone with the embedding
-        const indexName = process.env.PINECONE_INDEX_NAME!
-        console.log('Querying index:', indexName)
-        
-        const index = pinecone.index(indexName)
-        const queryResponse = await index.query({
-          vector: embedding,
-          topK: 5,
-          includeMetadata: true,
-        })
+      const queryVector = embedding.data[0].embedding
 
-        // Step 3: Extract relevant context from Pinecone results
-        if (queryResponse.matches && queryResponse.matches.length > 0) {
-          context = queryResponse.matches
-            ?.map(match => match.metadata?.text || '')
-            .filter(text => typeof text === 'string' && text.length > 0)
-            .join('\n\n') || ''
-          
-          pineconeStatus = 'connected'
-          console.log('Successfully retrieved context from Pinecone')
-          console.log('Found', queryResponse.matches.length, 'matches')
-        } else {
-          pineconeStatus = 'no_results'
-          console.log('No results found in Pinecone')
-        }
-      } catch (pineconeError) {
-        console.error('Pinecone error:', pineconeError)
-        pineconeStatus = 'error'
-        
-        // Log specific error details
-        if (pineconeError instanceof Error) {
-          console.error('Error message:', pineconeError.message)
-          console.error('Error name:', pineconeError.name)
-        }
-        
-        // Continue without Pinecone context
+      // 2. Search Pinecone
+      const results = await index.query({
+        vector: queryVector,
+        topK: 5,
+        includeMetadata: true,
+      })
+
+      if (results.matches && results.matches.length > 0) {
+        context = results.matches
+          .map((m: any) => `Q: ${m.metadata?.question || ''}\nA: ${m.metadata?.answer || m.metadata?.text || ''}`)
+          .join('\n\n')
+        pineconeStatus = 'connected'
+      } else {
+        pineconeStatus = 'no_results'
       }
-    } else {
-      console.log('Pinecone not available, using general knowledge')
-      pineconeStatus = 'unavailable'
+    } catch (error) {
+      console.error('Pinecone error:', error)
+      pineconeStatus = 'error'
+      // Continue without Pinecone context
     }
 
-    // Always provide comprehensive Ritual Network context
-    context = `**Ritual Network - Decentralized AI Infrastructure**
+    // Always provide comprehensive Ritual Network context as fallback
+    if (!context || context.trim() === '') {
+      context = `**Ritual Network - Decentralized AI Infrastructure**
 
 **What is Ritual Network?**
 Ritual Network is a revolutionary decentralized AI infrastructure platform that's fundamentally changing how AI works. Instead of big tech companies controlling AI, Ritual distributes AI computation across a global network of computers.
@@ -159,15 +89,12 @@ Ritual Network is a revolutionary decentralized AI infrastructure platform that'
 - Transparent governance
 - Open-source development
 - Community incentives through $RITUAL tokens`
+    }
 
-    // Determine response length based on settings
-    const responseLength = settings?.responseLength || 'medium'
-    const maxTokens = responseLength === 'short' ? 500 : responseLength === 'long' ? 1500 : 1000
-
-    // Determine AI model based on settings
+    // 3. Generate LLM answer
     const aiModel = settings?.aiModel || 'gpt-4o'
-
-    // Step 4: Create the prompt for GPT-4
+    const responseLength = settings?.responseLength || 'medium'
+    
     const systemPrompt = `You are **Ritual AI** - the official AI assistant for Ritual Network, the revolutionary decentralized AI infrastructure platform. You embody the spirit of decentralization, privacy, and community-driven innovation.
 
 **Your Identity:**
@@ -202,26 +129,25 @@ Use this knowledge to give accurate, helpful answers about Ritual Network. Alway
 
 **Remember**: You're not just an AI assistant - you're a gateway to understanding the future of decentralized AI. Be helpful, accurate, and conversational while showcasing Ritual Network's revolutionary potential.`
 
-    const userPrompt = `User: ${message}
+    const userPrompt = `User question: ${message}
 
-Please respond in a friendly, conversational way - like you're chatting with a friend who's curious about Ritual Network.`
+Context:
+${context}
 
-    // Step 5: Get streaming response from GPT-4 with optimized settings
-    const stream = await getOpenAI().chat.completions.create({
+Write a helpful, conversational response about Ritual Network. If the user is asking about something specific, provide detailed information. If they're just exploring, give them an engaging overview and ask follow-up questions.`
+
+    const completion = await client.chat.completions.create({
       model: aiModel,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      max_tokens: maxTokens,
+      max_tokens: responseLength === 'short' ? 500 : responseLength === 'long' ? 1500 : 1000,
       temperature: 0.7,
       stream: true,
-      // Optimize for faster response
-      presence_penalty: 0.1,
-      frequency_penalty: 0.1,
     })
 
-    // Create an optimized readable stream with buffering
+    // Create streaming response
     const readableStream = new ReadableStream({
       async start(controller) {
         let fullResponse = ''
@@ -229,7 +155,7 @@ Please respond in a friendly, conversational way - like you're chatting with a f
         let lastFlush = Date.now()
         
         try {
-          for await (const chunk of stream) {
+          for await (const chunk of completion) {
             const content = chunk.choices[0]?.delta?.content || ''
             if (content) {
               fullResponse += content
